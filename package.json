@@ -1,15 +1,26 @@
 {
-  "name": "grca-bot-v2",
-  "version": "1.0.0",
-  "main": "index.js",
+  "name": "grca-availability-bot",
+  "version": "3.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./src/index.js"
+    "start": "DEBUG=true nodemon ./src/index.ts",
+    "prod": "ts-node ./src/index.ts"
   },
   "license": "ISC",
   "dependencies": {
-    "nconf": "^0.10.0",
-    "nodemailer": "^6.1.1",
-    "puppeteer": "^1.15.0"
+    "bluebird": "^3.7.2",
+    "nconf": "^0.12.0",
+    "nodemailer": "^6.7.7",
+    "puppeteer": "^15.3.2"
+  },
+  "devDependencies": {
+    "@types/bluebird": "^3.5.36",
+    "@types/dom-parser": "^0.1.1",
+    "@types/lodash": "^4.14.182",
+    "@types/nconf": "^0.10.2",
+    "@types/nodemailer": "^6.4.4",
+    "nodemon": "^2.0.19",
+    "ts-node": "^10.8.2",
+    "typescript": "^4.7.4"
   }
 }

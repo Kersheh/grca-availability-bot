@@ -1,21 +1,29 @@
-FROM node:11
+FROM node:16-alpine
 
 # Install Chrome
-RUN echo 'deb http://dl.google.com/linux/chrome/deb/ stable main' > /etc/apt/sources.list.d/chrome.list
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
-RUN set -x \
-    && apt-get update \
-    && apt-get install -y \
-    google-chrome-stable
+RUN echo @edge https://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories \
+  && echo @edge https://dl-cdn.alpinelinux.org/alpine/edge/main >> /etc/apk/repositories \
+  && apk -U upgrade \
+  && apk add --no-cache \
+    chromium@edge \
+    nss@edge \
+    freetype@edge \
+    harfbuzz@edge \
+    ttf-freefont@edge \
+    libstdc++@edge \
+    wayland-libs-client@edge \
+    wayland-libs-server@edge \
+    wayland-libs-cursor@edge \
+    wayland-libs-egl@edge \
+    wayland@edge
 
-ENV CHROME_BIN /usr/bin/google-chrome
-
-# Build and run node app
-WORKDIR /usr/grca-bot
+WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
-
 COPY src ./src/
+COPY config ./config/
+COPY tsconfig.json ./tsconfig.json
 
-CMD [ "node", "./src/index.js" ]
+RUN npm i
+
+ENTRYPOINT [ "npm", "run", "prod" ]
