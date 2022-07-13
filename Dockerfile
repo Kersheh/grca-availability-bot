@@ -21,7 +21,7 @@ WORKDIR /app
 
 COPY package*.json ./
 COPY src ./src/
-COPY config ./config/
+COPY config/config.json ./config/config.json
 COPY tsconfig.json ./tsconfig.json
 
 RUN npm i

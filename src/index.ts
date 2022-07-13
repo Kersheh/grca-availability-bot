@@ -31,7 +31,7 @@ const getURL = (mapId: string) => `${nconf.get('GRCA:URL')}&startDate=${START_DA
 const executePuppeteerBot = async (url: string, mapArea: string) => {
   const browser = await puppeteer.launch({
     args: ['--no-sandbox'],
-    headless: !DEBUG
+    headless: process.env.NODE_ENV !== 'production' ? !DEBUG : true
   });
   const page = await browser.newPage();
   await page.goto(url, { waitUntil: 'networkidle0' });

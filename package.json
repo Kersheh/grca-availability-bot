@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "DEBUG=true nodemon ./src/index.ts",
-    "prod": "ts-node ./src/index.ts"
+    "prod": "NODE_ENV=production ts-node ./src/index.ts"
   },
   "license": "ISC",
   "dependencies": {
