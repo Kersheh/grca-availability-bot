@@ -26,4 +26,4 @@ COPY tsconfig.json ./tsconfig.json
 
 RUN npm i
 
-ENTRYPOINT [ "npm", "run", "prod" ]
+ENTRYPOINT ["npm", "run", "prod"]
