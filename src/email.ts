@@ -15,15 +15,15 @@ const smtpTransport = nodemailer.createTransport({
 });
 
 export const send = async (results: AvailableSites, dates: DateRange) => {
-  const emailArray: Array<string> = config.get('NOTIFICATION:OUTGOING:EMAIL');
+  const emailRecipients: Array<string> = config.get('NOTIFICATION:OUTGOING:EMAIL');
   const emailBody = results.reduce((acc, val) =>
-    `${acc}✓ ${val.mapArea} -- ${val.sitesAvailable.reduce((a, v) => `${!a ? a : `${a}, `}${v}`, '')}<br>`,
+    `${acc}✓ ${val.mapArea} -- ${val.sitesAvailable.reduce((a, v) => `${!a ? a : `${a}, `}${v}`, '')}<br/><a href=${val.url} target="_blank" rel="noopener noreferrer">${val.url}</a><br/><br/>`,
     `<b>Date Range: ${dates.startDate} to ${dates.endDate}</b><br/><b>Newly Available GRCA Sites:</b><br/><br/>`
   );
 
   const mailOptions = {
     from: config.get('NOTIFICATION:TRANSPORT:EMAIL'),
-    to: !DEBUG ? emailArray.reduce((acc, val) => `${acc ? `${acc},${val}` : `${val}`}`, '') : emailArray[0],
+    to: !DEBUG ? emailRecipients.reduce((acc, val) => `${acc ? `${acc},${val}` : `${val}`}`, '') : emailRecipients[0],
     subject: 'GRCA Site Availability Update (!)',
     html: emailBody
   };

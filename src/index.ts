@@ -30,15 +30,23 @@ const getURL = (mapId: string) => `${nconf.get('GRCA:URL')}&startDate=${START_DA
 
 const executePuppeteerBot = async (url: string, mapArea: string) => {
   const browser = await puppeteer.launch({
-    args: ['--no-sandbox'],
+    executablePath: process.env.DOCKER_ENV === 'Y' ? '/usr/bin/google-chrome' : undefined,
+    args: ['--no-sandbox', '--disable-dev-shm-usage'],
     headless: process.env.NODE_ENV !== 'production' ? !DEBUG : true
   });
+
+  console.debug('Puppeteer launched');
+
   const page = await browser.newPage();
   await page.goto(url, { waitUntil: 'networkidle0' });
+
+  console.debug('Puppeteer loaded page');
 
   await page.evaluate(() => {
     (document.querySelector('[aria-label="Calendar View"]') as HTMLButtonElement).click();
   });
+
+  console.debug('Puppeteer clicked button');
 
   await page.waitForNetworkIdle();
 
@@ -53,14 +61,18 @@ const executePuppeteerBot = async (url: string, mapArea: string) => {
       }));
   });
 
+  console.debug('Puppeteer retrieved table data');
+
   const sites = await tableQueryHandle.jsonValue<Array<SiteAvailability>>();
   const sitesAvailableAllWeekend = sites
     .filter((s) => s.friday && s.saturday && s.sunday)
     .map((s) => s.site);
 
+  console.debug('Puppeteer closing');
+
   await browser.close();
 
-  return { mapArea, sitesAvailable: sitesAvailableAllWeekend };
+  return { mapArea, url, sitesAvailable: sitesAvailableAllWeekend };
 };
 
 // fetch search result html page

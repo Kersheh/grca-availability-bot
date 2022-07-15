@@ -12,6 +12,7 @@ export type SiteAvailability = {
 
 export type AvailableSites = Array<{
   mapArea: string;
+  url: string;
   sitesAvailable: Array<string>;
 }>
 
