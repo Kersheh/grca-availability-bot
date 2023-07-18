@@ -5,12 +5,15 @@ import type { AvailableSites, DateRange } from './types';
 
 const config = nconf.file({ file: `./config/config.json` });
 const DEBUG = process.env.DEBUG ?? false;
+const DEBUG_EMAIL = process.env.DEBUG_EMAIL ?? false;
 
 const smtpTransport = nodemailer.createTransport({
-  service: config.get('NOTIFICATION:TRANSPORT:SERVICE'),
+  host: config.get('NOTIFICATION:TRANSPORT:HOST'),
+  port: config.get('NOTIFICATION:TRANSPORT:PORT'),
+  secure: true,
   auth: {
-    user: config.get('NOTIFICATION:TRANSPORT:EMAIL'),
-    pass: config.get('NOTIFICATION:TRANSPORT:PASSWORD')
+    user: config.get('NOTIFICATION:TRANSPORT:AUTH:USER'),
+    pass: config.get('NOTIFICATION:TRANSPORT:AUTH:PASS')
   }
 });
 
@@ -22,10 +25,10 @@ export const send = async (results: AvailableSites, dates: DateRange) => {
   );
 
   const mailOptions = {
-    from: config.get('NOTIFICATION:TRANSPORT:EMAIL'),
+    from: `"Matt Breckon" <matt@matthewbreckon.com>`,
     to: !DEBUG ? emailRecipients.reduce((acc, val) => `${acc ? `${acc},${val}` : `${val}`}`, '') : emailRecipients[0],
     subject: 'GRCA Site Availability Update (!)',
-    html: emailBody
+    html: !DEBUG_EMAIL ? emailBody : 'Test email'
   };
 
   try {
@@ -35,3 +38,8 @@ export const send = async (results: AvailableSites, dates: DateRange) => {
     console.error(`Failed to send mail to ${mailOptions.to}`, err);
   }
 };
+
+// debug email flag to troubleshoot email outbound smtp email
+if (DEBUG_EMAIL) {
+  send([], { startDate: '2020-01-01', endDate: '2021-01-01' });
+}

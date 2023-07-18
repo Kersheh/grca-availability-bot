@@ -23,8 +23,8 @@ const mapAreas = [
 ];
 
 // debug with hardcoded dates in September as we know we get mixed results for testing
-const START_DATE = !DEBUG ? config.get('GRCA:START_DATE') : '2022-09-02';
-const END_DATE = !DEBUG ? config.get('GRCA:END_DATE') : '2022-09-05';
+const START_DATE = !DEBUG ? config.get('GRCA:START_DATE') : '2023-09-01';
+const END_DATE = !DEBUG ? config.get('GRCA:END_DATE') : '2023-09-04';
 
 const getURL = (mapId: string) => `${nconf.get('GRCA:URL')}&startDate=${START_DATE}&endDate=${END_DATE}&mapId=${mapId}`;
 
@@ -43,10 +43,10 @@ const executePuppeteerBot = async (url: string, mapArea: string) => {
   console.debug('Puppeteer loaded page');
 
   await page.evaluate(() => {
-    (document.querySelector('[aria-label="Calendar View"]') as HTMLButtonElement).click();
+    (document.querySelector('#grid-view-button-button') as HTMLButtonElement).click();
   });
 
-  console.debug('Puppeteer clicked button');
+  console.debug('Puppeteer clicked Calendar button');
 
   await page.waitForNetworkIdle();
 
@@ -82,7 +82,10 @@ const executePuppeteerBot = async (url: string, mapArea: string) => {
 
     // execute in sequence to avoid DDoS
     const availableSites: AvailableSites = await mapSeries(
-      mapAreas, (area) => executePuppeteerBot(getURL(area.id), area.mapArea)
+      mapAreas, (area) => {
+        console.log(`Checking ${area.mapArea} for available sites...`);
+        return executePuppeteerBot(getURL(area.id), area.mapArea);
+      }
     );
 
     const filteredAvailableSites: AvailableSites = availableSites.filter((area) => area.sitesAvailable.length > 0);
@@ -98,6 +101,7 @@ const executePuppeteerBot = async (url: string, mapArea: string) => {
       console.log('No newly available sites found.');
     }
   } catch(err) {
-    console.log(err);
+    console.error(err);
+    process.exit(1);
   }
 })();
