@@ -33,9 +33,9 @@ export const send = async (results: AvailableSites, dates: DateRange) => {
 
   try {
     await smtpTransport.sendMail(mailOptions);
-    console.log(`Mail sent to ${mailOptions.to}`);
+    console.log(`grca-bot > Mail sent to ${mailOptions.to}`);
   } catch(err) {
-    console.error(`Failed to send mail to ${mailOptions.to}`, err);
+    console.error(`grca-bot > Failed to send mail to ${mailOptions.to}`, err);
   }
 };
 

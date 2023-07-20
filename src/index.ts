@@ -35,18 +35,18 @@ const executePuppeteerBot = async (url: string, mapArea: string) => {
     headless: process.env.NODE_ENV !== 'production' ? !DEBUG : true
   });
 
-  console.debug('Puppeteer launched');
+  console.debug('grca-bot > Puppeteer launched');
 
   const page = await browser.newPage();
   await page.goto(url, { waitUntil: 'networkidle0' });
 
-  console.debug('Puppeteer loaded page');
+  console.debug('grca-bot > Puppeteer loaded page');
 
   await page.evaluate(() => {
     (document.querySelector('#grid-view-button-button') as HTMLButtonElement).click();
   });
 
-  console.debug('Puppeteer clicked Calendar button');
+  console.debug('grca-bot > Puppeteer clicked Calendar button');
 
   await page.waitForNetworkIdle();
 
@@ -61,14 +61,14 @@ const executePuppeteerBot = async (url: string, mapArea: string) => {
       }));
   });
 
-  console.debug('Puppeteer retrieved table data');
+  console.debug('grca-bot > Puppeteer retrieved table data');
 
   const sites = await tableQueryHandle.jsonValue<Array<SiteAvailability>>();
   const sitesAvailableAllWeekend = sites
     .filter((s) => s.friday && s.saturday && s.sunday)
     .map((s) => s.site);
 
-  console.debug('Puppeteer closing');
+  console.debug('grca-bot > Puppeteer closing');
 
   await browser.close();
 
@@ -78,12 +78,12 @@ const executePuppeteerBot = async (url: string, mapArea: string) => {
 // fetch search result html page
 (async () => {
   try {
-    console.log(`Running scrape of Guelph Lake GRCA map areas`, mapAreas.map((area) => area.mapArea));
+    console.log(`grca-bot > Running scrape of Guelph Lake GRCA map areas`, mapAreas.map((area) => area.mapArea));
 
     // execute in sequence to avoid DDoS
     const availableSites: AvailableSites = await mapSeries(
       mapAreas, (area) => {
-        console.log(`Checking ${area.mapArea} for available sites...`);
+        console.log(`grca-bot > Checking ${area.mapArea} for available sites...`);
         return executePuppeteerBot(getURL(area.id), area.mapArea);
       }
     );
@@ -91,17 +91,17 @@ const executePuppeteerBot = async (url: string, mapArea: string) => {
     const filteredAvailableSites: AvailableSites = availableSites.filter((area) => area.sitesAvailable.length > 0);
 
     if (filteredAvailableSites.length > 0) {
-      console.log('Newly available sites:', filteredAvailableSites);
+      console.log('grca-bot > Newly available sites:', filteredAvailableSites);
 
       send(filteredAvailableSites, {
         startDate: START_DATE,
         endDate: END_DATE
       });
     } else {
-      console.log('No newly available sites found.');
+      console.log('grca-bot > No newly available sites found.');
     }
   } catch(err) {
-    console.error(err);
+    console.error(`grca-bot > ${err}`);
     process.exit(1);
   }
 })();
