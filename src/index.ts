@@ -4,6 +4,8 @@ import { mapSeries } from 'bluebird';
 
 import { send } from './email';
 import type { MapArea, SiteAvailability, AvailableSites } from './types';
+import { addDays, isAfter, parseISO } from 'date-fns';
+import { formatDate } from './utils';
 
 const config = nconf.file({ file: `./config/config.json` });
 const DEBUG = process.env.DEBUG ?? false;
@@ -14,23 +16,27 @@ const mapAreaSandyBay: MapArea = { id: '-2147483624', mapArea: 'Sandy Bay' };
 const mapAreaHillcrest: MapArea = { id: '-2147483622', mapArea: 'Hillcrest' };
 const mapAreaSunrise: MapArea = { id: '-2147483621', mapArea: 'Sunrise' };
 
-const mapAreas = [
+const mapAreas = !DEBUG ? [
   mapAreaLakeview,
   mapAreaLookoutPoint,
   mapAreaSandyBay,
   mapAreaHillcrest,
   mapAreaSunrise
+] : [
+  mapAreaLakeview
 ];
 
 // debug with hardcoded dates in September as we know we get mixed results for testing
-const START_DATE = !DEBUG ? config.get('GRCA:START_DATE') : '2023-09-01';
-const END_DATE = !DEBUG ? config.get('GRCA:END_DATE') : '2023-09-04';
+const START_DATE: string = !DEBUG ? config.get('GRCA:START_DATE') : config.get('GRCA:DEBUG_START_DATE');
+const END_DATE: string = !DEBUG ? config.get('GRCA:END_DATE') : config.get('GRCA:DEBUG_END_DATE');
 
 const getURL = (mapId: string) => `${nconf.get('GRCA:URL')}&startDate=${START_DATE}&endDate=${END_DATE}&mapId=${mapId}`;
 
 const executePuppeteerBot = async (url: string, mapArea: string) => {
+  console.debug(`grca-bot > ${url}`);
+
   const browser = await puppeteer.launch({
-    executablePath: process.env.DOCKER_ENV === 'Y' ? '/usr/bin/google-chrome' : undefined,
+    executablePath: process.env.DOCKER_ENV === 'Y' ? '/usr/bin/google-chrome' : '/usr/bin/chromium-browser',
     args: ['--no-sandbox', '--disable-dev-shm-usage'],
     headless: process.env.NODE_ENV !== 'production' ? !DEBUG : true
   });
@@ -38,6 +44,13 @@ const executePuppeteerBot = async (url: string, mapArea: string) => {
   console.debug('grca-bot > Puppeteer launched');
 
   const page = await browser.newPage();
+
+  await page.setExtraHTTPHeaders({
+    'user-agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
+    Referer: 'https://www.google.com/',
+});
+
   await page.goto(url, { waitUntil: 'networkidle0' });
 
   console.debug('grca-bot > Puppeteer loaded page');
@@ -63,7 +76,7 @@ const executePuppeteerBot = async (url: string, mapArea: string) => {
 
   console.debug('grca-bot > Puppeteer retrieved table data');
 
-  const sites = await tableQueryHandle.jsonValue<Array<SiteAvailability>>();
+  const sites = await tableQueryHandle.jsonValue();
   const sitesAvailableAllWeekend = sites
     .filter((s) => s.friday && s.saturday && s.sunday)
     .map((s) => s.site);
@@ -77,6 +90,12 @@ const executePuppeteerBot = async (url: string, mapArea: string) => {
 
 // fetch search result html page
 (async () => {
+  if (isAfter(new Date(), addDays(parseISO(START_DATE), 1))) {
+    console.error(`grca-bot > Today's date ${formatDate(new Date().toISOString())} is after the start date ${formatDate(START_DATE)}`);
+    console.log('grca-bot > Shutting down bot');
+    process.exit(1);
+  }
+
   try {
     console.log(`grca-bot > Running scrape of Guelph Lake GRCA map areas`, mapAreas.map((area) => area.mapArea));
 

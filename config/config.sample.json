@@ -1,14 +1,17 @@
 {
   "GRCA": {
     "URL": "https://www.grcacamping.ca/create-booking/results?resourceLocationId=-2147483645&searchTabGroupId=0&bookingCategoryId=0&nights=3&isReserving=true&equipmentId=-32767&subEquipmentId=-32759&partySize=1",
-    "START_DATE": "2023-07-28",
-    "END_DATE": "2023-07-31"
+    "START_DATE": "2025-07-17",
+    "END_DATE": "2025-07-21",
+    "DEBUG_START_DATE": "2025-09-01",
+    "DEBUG_END_DATE": "2025-09-05"
   },
   "NOTIFICATION": {
     "OUTGOING": {
       "EMAIL": [
         ""
-      ]
+      ],
+      "DEBUG_EMAIL": ""
     },
     "TRANSPORT": {
       "HOST": "smtpout.secureserver.net",
